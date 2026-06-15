@@ -1,24 +1,18 @@
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ProjectileData = require(ReplicatedStorage.Shared.ProjectileSimulation.ProjectileData)
 
-local USE_SIMULATION = false
+local USE_SIMULATION = true
 
 local remoteEvents = ReplicatedStorage.RemoteEvents
-local projectileCreated = remoteEvents:FindFirstChild("ProjectileCreated")
-local projectileChanged = remoteEvents:FindFirstChild("ProjectileChanged")
+local projectileCreated = Instance.new("RemoteEvent")
+projectileCreated.Name = "ProjectileCreated"
+projectileCreated.Parent = remoteEvents
 
-if not projectileCreated then
-	projectileCreated = Instance.new("RemoteEvent")
-	projectileCreated.Name = "ProjectileCreated"
-	projectileCreated.Parent = remoteEvents
-end
-
-if not projectileChanged then
-	projectileChanged = Instance.new("RemoteEvent")
-	projectileChanged.Name = "ProjectileChanged"
-	projectileChanged.Parent = remoteEvents
-end
+local projectileChanged = Instance.new("RemoteEvent")
+projectileChanged.Name = "ProjectileChanged"
+projectileChanged.Parent = remoteEvents
 
 local sourceFireBall = ReplicatedStorage.Projectiles.FireBall
 
@@ -32,6 +26,14 @@ local SimulationManager = {
         }
         ]]
 	},
+	Simulations = {
+		--[[
+        [string] = {
+            Position: Vector3,
+            Direction: Vector3,
+        }
+        ]]
+	},
 }
 
 type RealProjectileParams = {
@@ -40,10 +42,21 @@ type RealProjectileParams = {
 	RemainingLifetime: number,
 }
 
+type SimulationParams = {
+	ProjectileType: string,
+	Direction: Vector3,
+	RemainingLifetime: number,
+	Position: Vector3,
+}
+
+function SimulationManager:CreateSimulation(player: Player, simulationParams: SimulationParams): string
+	local objectId = HttpService:GenerateGUID(false)
+	self.Simulations[objectId] = simulationParams
+	return objectId
+end
+
 function SimulationManager:CreateProjectile(player: Player, mouseHit: CFrame)
 	-- Create fireball in front of player
-	local fireBall = sourceFireBall:Clone()
-	fireBall.Parent = workspace
 	local character = player.Character
 	if not character then
 		return
@@ -52,12 +65,34 @@ function SimulationManager:CreateProjectile(player: Player, mouseHit: CFrame)
 	if not humanoidRootPart then
 		return
 	end
-	fireBall:PivotTo(humanoidRootPart.CFrame * CFrame.new(0, 0, -5))
-	local origin = fireBall:GetPivot()
-	local direction = (mouseHit.Position - origin.Position).Unit
 
 	local projectileType = "FireBall"
 	local lifetime = ProjectileData[projectileType].Lifetime
+	local origin = humanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+	local direction = (mouseHit.Position - origin.Position).Unit
+
+	if USE_SIMULATION then
+		local simulationParams = {
+			ProjectileType = projectileType,
+			Position = origin.Position,
+			Direction = direction,
+			RemainingLifetime = lifetime,
+		}
+		local objectId = SimulationManager:CreateSimulation(player, simulationParams)
+		local projectileRendererParams = {
+			ObjectId = objectId,
+			ProjectileType = projectileType,
+			Origin = origin,
+			Direction = direction,
+		}
+		projectileCreated:FireAllClients(projectileRendererParams)
+		return
+	end
+
+	local fireBall = sourceFireBall:Clone()
+	fireBall.Parent = workspace
+	fireBall:PivotTo(origin)
+
 	local params = {
 		ProjectileType = projectileType,
 		Direction = direction,
@@ -83,7 +118,7 @@ function SimulationManager:OnHeartbeat(dt: number)
 		-- Also ignore the caster/teammates in your actual game!
 		if #partsInFireBall > 0 then
 			-- Add explosion, damage, etc. here
-            print("FireBall hit!")
+			print("FireBall hit!")
 			fireBall:Destroy()
 			self.RealProjectiles[fireBall] = nil
 			continue
