@@ -23,7 +23,6 @@ wandActivated.OnServerEvent:Connect(function(player: Player, mouseHit: CFrame)
     SimulationManager:CreateProjectile(player, mouseHit)
 end)
 
-
 RunService.Heartbeat:Connect(function(dt: number)
 	SimulationManager:OnHeartbeat(dt)
 end)

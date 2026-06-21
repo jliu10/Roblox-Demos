@@ -35,9 +35,7 @@ local SimulationManager = {
 	},
 }
 
-
-
-function SimulationManager:CreateSimulation(player: Player, simulationParams: SimulationParams): string
+function SimulationManager:CreateSimulation(simulationParams: SimulationParams): string
 	local objectId = HttpService:GenerateGUID(false)
 	self.Simulations[objectId] = simulationParams
 	return objectId
@@ -66,7 +64,7 @@ function SimulationManager:CreateProjectile(player: Player, mouseHit: CFrame)
 			Direction = direction,
 			RemainingLifetime = lifetime,
 		}
-		local objectId = SimulationManager:CreateSimulation(player, simulationParams)
+		local objectId = SimulationManager:CreateSimulation(simulationParams)
 		local projectileRendererParams = {
 			ObjectId = objectId,
 			ProjectileType = projectileType,
@@ -92,9 +90,9 @@ end
 function SimulationManager:OnHeartbeat(dt: number)
     if USE_SIMULATION then
         for projectileId, simulationParams in pairs(self.Simulations) do
-		local onHeartbeatResult = ProjectileFactory.OnHeartbeat(projectileId, simulationParams, dt)
-		self.Simulations[projectileId] = onHeartbeatResult
-	end
+            local onHeartbeatResult = ProjectileFactory.OnHeartbeat(projectileId, simulationParams, dt)
+            self.Simulations[projectileId] = onHeartbeatResult
+        end
     else
         for fireBall, params in pairs(self.RealProjectiles) do
             params.RemainingLifetime -= dt
