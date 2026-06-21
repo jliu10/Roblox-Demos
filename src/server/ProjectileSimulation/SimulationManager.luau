@@ -12,7 +12,6 @@ local USE_SIMULATION = true
 
 local remoteEvents = ReplicatedStorage.RemoteEvents
 local projectileCreated = remoteEvents:WaitForChild("ProjectileCreated")
-local projectileChanged = remoteEvents:WaitForChild("ProjectileChanged")
 
 local sourceFireBall = ReplicatedStorage.Projectiles.FireBall
 
