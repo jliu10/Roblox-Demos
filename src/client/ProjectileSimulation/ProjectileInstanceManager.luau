@@ -1,10 +1,16 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local ProjectileRendererFactory = require(script.Parent.ProjectileRendererFactory)
+local Types =
+	require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ProjectileSimulation"):WaitForChild("Types"))
+
+type ProjectileInstanceParams = Types.ProjectileInstanceParams
 
 local ProjectileInstanceManager = {
 	ProjectileObjects = {
 		--[[
         [string]: {
-            Instance_: Instance,
+            Instance: Instance,
             ProjectileType: string,
             ...
         }
@@ -12,19 +18,31 @@ local ProjectileInstanceManager = {
 	},
 }
 
-type ProjectileInstanceParams = {
-	ProjectileType: string,
-	Direction: Vector3,
-	ObjectId: string,
-	Instance: Instance,
-}
-
 function ProjectileInstanceManager:RegisterObject(params: ProjectileInstanceParams)
 	self.ProjectileObjects[params.ObjectId] = {
-		Instance_ = params.Instance,
+		Instance = params.Instance,
 		ProjectileType = params.ProjectileType,
 		Direction = params.Direction,
 	}
+end
+
+local function DestroyObject(id: string)
+	if ProjectileInstanceManager.ProjectileObjects[id] == nil then
+		return
+	end
+
+	ProjectileInstanceManager.ProjectileObjects[id].Instance:Destroy()
+	ProjectileInstanceManager.ProjectileObjects[id] = nil
+end
+
+function ProjectileInstanceManager:OnProjectileChanged(projectileInstanceParams)
+	local id = projectileInstanceParams.ObjectId
+	local event = projectileInstanceParams.Event
+	print(`Received ProjectileChanged event`)
+
+	if event == "Hit" or event == "Expired" then
+		DestroyObject(id)
+	end
 end
 
 function ProjectileInstanceManager:OnPreRender(dt: number)
@@ -32,7 +50,7 @@ function ProjectileInstanceManager:OnPreRender(dt: number)
 		local projectilePreRenderParams = {
 			Dt = dt,
 			ProjectileType = data.ProjectileType,
-			Instance = data.Instance_,
+			Instance = data.Instance,
 			Direction = data.Direction,
 		}
 

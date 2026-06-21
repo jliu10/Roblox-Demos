@@ -30,6 +30,10 @@ end
 
 projectileCreated.OnClientEvent:Connect(onProjectileCreated)
 
+projectileChanged.OnClientEvent:Connect(function(params: ProjectileInstanceParams)
+    ProjectileInstanceManager:OnProjectileChanged(params)
+end)
+
 projectileRendered.Event:Connect(function(params: ProjectileInstanceParams)
 	ProjectileInstanceManager:RegisterObject(params)
 end)

@@ -2,6 +2,11 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ProjectileData = require(ReplicatedStorage.Shared.ProjectileSimulation.ProjectileData)
+local ProjectileFactory = require(script.Parent.ProjectileFactory)
+local Types = require(ReplicatedStorage.Shared.ProjectileSimulation.Types)
+
+type SimulationParams = Types.SimulationParams
+type RealProjectileParams = Types.RealProjectileParams
 
 local USE_SIMULATION = true
 
@@ -36,18 +41,7 @@ local SimulationManager = {
 	},
 }
 
-type RealProjectileParams = {
-	ProjectileType: string,
-	Direction: Vector3,
-	RemainingLifetime: number,
-}
 
-type SimulationParams = {
-	ProjectileType: string,
-	Direction: Vector3,
-	RemainingLifetime: number,
-	Position: Vector3,
-}
 
 function SimulationManager:CreateSimulation(player: Player, simulationParams: SimulationParams): string
 	local objectId = HttpService:GenerateGUID(false)
@@ -102,30 +96,37 @@ function SimulationManager:CreateProjectile(player: Player, mouseHit: CFrame)
 end
 
 function SimulationManager:OnHeartbeat(dt: number)
-	for fireBall, params in pairs(self.RealProjectiles) do
-		params.RemainingLifetime -= dt
-		if params.RemainingLifetime <= 0 then
-			fireBall:Destroy()
-			self.RealProjectiles[fireBall] = nil
-			continue
-		end
-
-		-- Check for hit
-		local overlapParams = OverlapParams.new()
-		overlapParams.RespectCanCollide = true
-		local partsInFireBall = workspace:GetPartsInPart(fireBall.Root, overlapParams)
-
-		-- Also ignore the caster/teammates in your actual game!
-		if #partsInFireBall > 0 then
-			-- Add explosion, damage, etc. here
-			print("FireBall hit!")
-			fireBall:Destroy()
-			self.RealProjectiles[fireBall] = nil
-			continue
-		end
-
-		fireBall:MoveTo(fireBall.Root.Position + params.Direction * ProjectileData[params.ProjectileType].Speed * dt)
+    if USE_SIMULATION then
+        for projectileId, simulationParams in pairs(self.Simulations) do
+		local onHeartbeatResult = ProjectileFactory.OnHeartbeat(projectileId, simulationParams, dt)
+		self.Simulations[projectileId] = onHeartbeatResult
 	end
+    else
+        for fireBall, params in pairs(self.RealProjectiles) do
+            params.RemainingLifetime -= dt
+            if params.RemainingLifetime <= 0 then
+                fireBall:Destroy()
+                self.RealProjectiles[fireBall] = nil
+                continue
+            end
+
+            -- Check for hit
+            local overlapParams = OverlapParams.new()
+            overlapParams.RespectCanCollide = true
+            local partsInFireBall = workspace:GetPartsInPart(fireBall.Root, overlapParams)
+
+            -- Also ignore the caster/teammates in your actual game!
+            if #partsInFireBall > 0 then
+                -- Add explosion, damage, etc. here
+                print("FireBall hit!")
+                fireBall:Destroy()
+                self.RealProjectiles[fireBall] = nil
+                continue
+            end
+
+            fireBall:MoveTo(fireBall.Root.Position + params.Direction * ProjectileData[params.ProjectileType].Speed * dt)
+        end
+    end
 end
 
 return SimulationManager
