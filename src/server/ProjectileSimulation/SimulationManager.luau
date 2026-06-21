@@ -11,13 +11,8 @@ type RealProjectileParams = Types.RealProjectileParams
 local USE_SIMULATION = true
 
 local remoteEvents = ReplicatedStorage.RemoteEvents
-local projectileCreated = Instance.new("RemoteEvent")
-projectileCreated.Name = "ProjectileCreated"
-projectileCreated.Parent = remoteEvents
-
-local projectileChanged = Instance.new("RemoteEvent")
-projectileChanged.Name = "ProjectileChanged"
-projectileChanged.Parent = remoteEvents
+local projectileCreated = remoteEvents:WaitForChild("ProjectileCreated")
+local projectileChanged = remoteEvents:WaitForChild("ProjectileChanged")
 
 local sourceFireBall = ReplicatedStorage.Projectiles.FireBall
 
