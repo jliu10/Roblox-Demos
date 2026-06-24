@@ -21,6 +21,7 @@ local sourceFireBall = projectiles:WaitForChild("FireBall")
 
 local FireBallRenderer = {}
 
+-- This creates the fireball instance
 function FireBallRenderer.Render(params: ProjectileRendererParams): Model
 	local origin = params.Origin
 	local castOffset = CFrame.new(0, 0, -5)
@@ -46,6 +47,7 @@ function FireBallRenderer.Render(params: ProjectileRendererParams): Model
 	return newFireBall
 end
 
+-- This moves the fireball
 function FireBallRenderer.OnPreRender(params: ProjectilePreRenderParams)
 	local instance = params.Instance
 

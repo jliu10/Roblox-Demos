@@ -18,6 +18,7 @@ local ProjectileInstanceManager = {
 	},
 }
 
+-- This creates the entry for a new projectile
 function ProjectileInstanceManager:RegisterObject(params: ProjectileInstanceParams)
 	self.ProjectileObjects[params.ObjectId] = {
 		Instance = params.Instance,
@@ -35,16 +36,18 @@ local function DestroyObject(id: string)
 	ProjectileInstanceManager.ProjectileObjects[id] = nil
 end
 
+-- This is called when the server detects a projectile hit/expiration
 function ProjectileInstanceManager:OnProjectileChanged(projectileInstanceParams)
 	local id = projectileInstanceParams.ObjectId
 	local event = projectileInstanceParams.Event
-	print(`Received ProjectileChanged event`)
+	print(`Received ProjectileChanged event: {event}`)
 
 	if event == "Hit" or event == "Expired" then
 		DestroyObject(id)
 	end
 end
 
+-- This moves all rendered projectiles
 function ProjectileInstanceManager:OnPreRender(dt: number)
 	for _objectId, data in pairs(self.ProjectileObjects) do
 		local projectilePreRenderParams = {

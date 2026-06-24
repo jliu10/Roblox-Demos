@@ -27,6 +27,7 @@ function FireBall.OnHeartbeat(
 		error("SimulationParams has no RemainingLifetime")
 	end
 
+	-- First check if the projectile expired
 	if simulationParams.RemainingLifetime <= 0 then
 		local projectileChangedParams = {
 			ObjectId = projectileId,
@@ -39,12 +40,14 @@ function FireBall.OnHeartbeat(
 
 	local travelVector = simulationParams.Direction * SPEED * deltaTime
 
-	-- Exclude the caster's character from the hit detection
+	-- Modify the raycastParams properties if you want to prevent friendly fire.
+	-- i.e. filter out the characters of the caster and their allies.
 	local raycastParams = RaycastParams.new()
 
 	-- Perform a Spherecast along the path of travel using the fireball's radius
 	local result = workspace:Spherecast(currentPosition, FIREBALL_RADIUS, travelVector, raycastParams)
 
+	-- Then check for hit detection
 	if result then
 		local projectileChangedParams = {
 			ObjectId = projectileId,
@@ -55,6 +58,7 @@ function FireBall.OnHeartbeat(
 		return nil
 	end
 
+	-- Finally, we can move the projectile
 	local newPosition = currentPosition + travelVector
 	local remainingLifetime = simulationParams.RemainingLifetime - deltaTime
 	local newState = {

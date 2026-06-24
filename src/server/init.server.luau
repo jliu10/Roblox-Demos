@@ -17,10 +17,12 @@ projectileChanged.Parent = remoteEvents
 
 local SimulationManager = require(script.ProjectileSimulation.SimulationManager)
 
+-- In my game, I have a Tool (a wand) that has a local script that fires the WandActivated RemoteEvent. It passes the mouseHit as an argument.
+-- In your game, you should probably fire a differently named event from your own Tool.
 wandActivated.OnServerEvent:Connect(function(player: Player, mouseHit: CFrame)
-    print(`Wand activated`)
+	print(`Wand activated`)
 
-    SimulationManager:CreateProjectile(player, mouseHit)
+	SimulationManager:CreateProjectile(player, mouseHit)
 end)
 
 RunService.Heartbeat:Connect(function(dt: number)

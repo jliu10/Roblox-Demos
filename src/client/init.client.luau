@@ -1,7 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
 local ProjectileInstanceManager = require(script.ProjectileSimulation.ProjectileInstanceManager)
 local ProjectileRendererFactory = require(script.ProjectileSimulation.ProjectileRendererFactory)
-local RunService = game:GetService("RunService")
+local Types = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ProjectileSimulation"):WaitForChild("Types"))
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local projectileCreated = remoteEvents:WaitForChild("ProjectileCreated")
@@ -10,19 +12,8 @@ local projectileChanged = remoteEvents:WaitForChild("ProjectileChanged")
 local bindableEvents = script.Parent:WaitForChild("BindableEvents")
 local projectileRendered = bindableEvents:WaitForChild("ProjectileRendered")
 
-type ProjectileRendererParams = {
-	ProjectileType: string,
-	Origin: CFrame,
-	Direction: Vector3,
-	ObjectId: string,
-}
-
-type ProjectileInstanceParams = {
-	ProjectileType: string,
-	Direction: Vector3,
-	ObjectId: string,
-	Instance: Instance,
-}
+type ProjectileRendererParams = Types.ProjectileRendererParams
+type ProjectileInstanceParams = Types.ProjectileInstanceParams
 
 local function onProjectileCreated(params: ProjectileRendererParams)
 	ProjectileRendererFactory.Render(params)
